@@ -1,0 +1,21 @@
+server:
+  port: 8087
+
+constant:
+   authenticationUrl: /oauth/token/
+   clientId: web-client
+   clientScret: web-client-secret
+   resourceId: oauth
+   urlPattern: /**
+   accessPattern: "#oauth2.hasScope('read')"
+   
+logging:
+  file: logs/application-debug.log
+  pattern:
+    console: "%d %-5level %logger : %msg%n"
+    file: "%d %-5level [%thread] %logger : %msg%n"
+  level:
+    org.springframework.web: DEBUG
+    com.stokck.oauth2.authserver: DEBUG
+    org.hibernate: DEBUG
+    
