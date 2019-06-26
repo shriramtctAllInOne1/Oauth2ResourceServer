@@ -1,3 +1,8 @@
+/**
+ * The ResourceServer Project, BSD License,Copyright (c) 2019
+ * All rights reserved.
+**/
+
 package com.stock.oauth2.resourceserver.config;
 
 import java.io.Serializable;
@@ -5,6 +10,12 @@ import java.io.Serializable;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
+/**
+ * Loading property files
+ * 
+ * @author shriram
+ *
+ */
 @EnableConfigurationProperties
 @ConfigurationProperties(prefix = "constant")
 public class YAMLConfig implements Serializable {
@@ -38,6 +49,25 @@ public class YAMLConfig implements Serializable {
 	 * 
 	 */
 	String accessPattern;
+	
+	/**
+	 * 
+	 */
+	String baseUrl;
+	
+	/**
+	 * 
+	 */
+	String accessKey;
+	
+	/**
+	 * 
+	 */
+	String apiName;
+	/**
+	 * 
+	 */
+	String exchange;
 
 	/**
 	 * @return
@@ -121,6 +151,56 @@ public class YAMLConfig implements Serializable {
 	 */
 	public void setAccessPattern(String accessPattern) {
 		this.accessPattern = accessPattern;
+	}
+
+	public String getBaseUrl() {
+		return baseUrl;
+	}
+
+	public void setBaseUrl(String baseUrl) {
+		this.baseUrl = baseUrl;
+	}
+
+	/**
+	 * @return
+	 */
+	public String getAccessKey() {
+		return accessKey;
+	}
+
+	/**
+	 * @param accessKey
+	 */
+	public void setAccessKey(String accessKey) {
+		this.accessKey = accessKey;
+	}
+
+	/**
+	 * @return
+	 */
+	public String getApiName() {
+		return apiName;
+	}
+
+	/**
+	 * @param apiName
+	 */
+	public void setApiName(String apiName) {
+		this.apiName = apiName;
+	}
+
+	/**
+	 * @return
+	 */
+	public String getExchange() {
+		return exchange;
+	}
+
+	/**
+	 * @param exchange
+	 */
+	public void setExchange(String exchange) {
+		this.exchange = exchange;
 	}
 
 	@Override

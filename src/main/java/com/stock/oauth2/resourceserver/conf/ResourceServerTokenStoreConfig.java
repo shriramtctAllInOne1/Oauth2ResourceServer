@@ -1,3 +1,7 @@
+/**
+ * The ResourceServer Project, BSD License,Copyright (c) 2019
+ * All rights reserved.
+**/
 package com.stock.oauth2.resourceserver.conf;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,12 +18,24 @@ import org.springframework.security.oauth2.provider.token.store.JwtTokenStore;
 
 import com.stock.oauth2.resourceserver.config.YAMLConfig;
 
+/**
+ * @author shriram
+ *
+ */
 @Configuration
 public class ResourceServerTokenStoreConfig {
 
+	/**
+	 * .YML properties file configuration
+	 */
 	@Autowired
 	YAMLConfig config;
 
+	/**
+	 * Bean to verify the token
+	 * 
+	 * @return
+	 */
 	@Primary
 	@Bean
 	@Profile("!jwttoken")
@@ -31,6 +47,9 @@ public class ResourceServerTokenStoreConfig {
 		return tokenService;
 	}
 
+	/**
+	 * @return
+	 */
 	@Bean
 	@Primary
 	@Profile("jwttoken")
@@ -40,12 +59,18 @@ public class ResourceServerTokenStoreConfig {
 		return defaultTokenServices;
 	}
 
+	/**
+	 * @return
+	 */
 	@Bean
 	@Profile("jwttoken")
 	public TokenStore tokenStore() {
 		return new JwtTokenStore(accessTokenConverter());
 	}
 
+	/**
+	 * @return
+	 */
 	@Bean
 	@Profile("jwttoken")
 	public JwtAccessTokenConverter accessTokenConverter() {
