@@ -64,7 +64,7 @@ public class HttpClientConfig {
 			poolingConnectionManager = new PoolingHttpClientConnectionManager(socketFactoryRegistry);
 			poolingConnectionManager.setMaxTotal(StockAnalyzerConstant.MAX_TOTAL_CONNECTIONS);
 		} catch (KeyManagementException | KeyStoreException | NoSuchAlgorithmException e) {
-			LOGGER.error("Pooling Connection Manager Initialisation failure because of " + e.getMessage(), e);
+			LOGGER.debug("Pooling Connection Manager Initialisation failure because of " + e.getMessage(), e);
 		}
 		return poolingConnectionManager;
 	}
@@ -108,14 +108,14 @@ public class HttpClientConfig {
 			public void run() {
 				try {
 					if (connectionManager != null) {
-						LOGGER.trace("run IdleConnectionMonitor - Closing expired and idle connections...");
+						LOGGER.debug("run IdleConnectionMonitor - Closing expired and idle connections...");
 						connectionManager.closeExpiredConnections();
 						connectionManager.closeIdleConnections(StockAnalyzerConstant.CLOSE_IDLE_CONNECTION_WAIT_TIME_SECS, TimeUnit.SECONDS);
 					} else {
-						LOGGER.trace("run IdleConnectionMonitor - Http Client Connection manager is not initialised");
+						LOGGER.debug("run IdleConnectionMonitor - Http Client Connection manager is not initialised");
 					}
 				} catch (Exception e) {
-					LOGGER.error("run IdleConnectionMonitor - Exception occurred. msg={}, e={}", e.getMessage(), e);
+					LOGGER.debug("run IdleConnectionMonitor - Exception occurred. msg={}, e={}", e.getMessage(), e);
 				}
 			}
 		};

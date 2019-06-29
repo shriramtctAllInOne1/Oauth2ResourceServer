@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.bson.Document;
 import org.json.JSONArray;
@@ -23,6 +25,8 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.client.result.DeleteResult;
+import com.stock.oauth2.resourceserver.config.ErrorCodeMsgConstant;
+import com.stock.oauth2.resourceserver.config.StockSuccesCode;
 import com.stock.oauth2.resourceserver.constant.StockAnalyzerConstant;
 import com.stock.oauth2.resourceserver.dao.StockAnalyzerDAO;
 import com.stock.oauth2.resourceserver.domain.Dbcollection;
@@ -30,9 +34,12 @@ import com.stock.oauth2.resourceserver.domain.Stock;
 import com.stock.oauth2.resourceserver.domain.Strategy;
 import com.stock.oauth2.resourceserver.domain.TickerData;
 import com.stock.oauth2.resourceserver.dto.OaitmDTO;
+import com.stock.oauth2.resourceserver.exception.CustomJsonException;
+import com.stock.oauth2.resourceserver.exception.StockAnalyzerException;
 import com.stock.oauth2.resourceserver.repository.StockDataAnalyzerRepository;
 import com.stock.oauth2.resourceserver.repository.StockTickDataRepository;
 import com.stock.oauth2.resourceserver.restClient.RestClient;
+import com.stock.oauth2.resourceserver.util.CommonUtility;
 
 /**
  * 
@@ -70,6 +77,26 @@ public class StockDataAnalyzerServiceImpl implements StockDataAnalyzerService {
 	RestClient restclient;
 
 	/**
+	 * 
+	 */
+	@Autowired
+	CommonUtility commonUtility;
+	
+	/**
+	 * 
+	 */
+	@Autowired
+	ErrorCodeMsgConstant errormsgConfig;
+	
+	/**
+	 * 
+	 */
+	@Autowired
+	StockSuccesCode SuccesCode;
+	
+	
+
+	/**
 	 * Logger Object
 	 */
 	private static final Logger LOGGER = LoggerFactory.getLogger(StockDataAnalyzerServiceImpl.class);
@@ -99,13 +126,23 @@ public class StockDataAnalyzerServiceImpl implements StockDataAnalyzerService {
 	/**
 	 * @param watchListJson
 	 * @return
+	 * @throws StockAnalyzerException
 	 */
 	@Override
-	public String createWatchList(String watchListJson) {
-		LOGGER.debug("Entering StockDataAnalyzerServiceImpl.class createStrategy()");
-		String strategyObj = stockAnalyzerDAO.createWatchList(watchListJson);
-		LOGGER.debug("Saved Obj {}", strategyObj);
-		return strategyObj;
+	public String createWatchList(String watchListJson) throws StockAnalyzerException {
+		LOGGER.debug("Entering StockDataAnalyzerServiceImpl.class createWatchList()");
+		String response = "";
+		try {
+			String strategyObj = stockAnalyzerDAO.createWatchList(watchListJson);
+			if (strategyObj.contains("_id")) {
+				response = commonUtility.createSucessResponse(SuccesCode.getSucccode1(),SuccesCode.getSuccmsg());
+			}
+			LOGGER.debug("Saved wathcList {}", strategyObj);
+		} catch (StockAnalyzerException e) {
+			LOGGER.error("Error while creating reateWatchList() : {}", e.getMessage());
+			throw e;
+		}
+		return response;
 	}
 
 	/**
@@ -150,11 +187,17 @@ public class StockDataAnalyzerServiceImpl implements StockDataAnalyzerService {
 	 * 
 	 * @param dbcollection
 	 * @return
+	 * @throws StockAnalyzerException
 	 */
 	@Override
-	public void createCollection(Dbcollection dbcollection) {
+	public void createCollection(Dbcollection dbcollection) throws StockAnalyzerException {
 		LOGGER.debug("Entering StockDataAnalyzerServiceImpl.class createCollection()");
-		stockAnalyzerDAO.createCollection(dbcollection);
+		try {
+			stockAnalyzerDAO.createCollection(dbcollection);
+		} catch (StockAnalyzerException e) {
+			LOGGER.error("Error while creating createCollection(): {}", e.getMessage());
+			throw e;
+		}
 	}
 
 	@Override
@@ -166,12 +209,19 @@ public class StockDataAnalyzerServiceImpl implements StockDataAnalyzerService {
 	/**
 	 * @param oaitmdto
 	 * @return
+	 * @throws StockAnalyzerException
 	 */
 	@Override
-	public String createAndSaveOAITM(OaitmDTO oaitmdto) {
-		LOGGER.debug("Entering StockDataAnalyzerServiceImpl.class createAndSaveOAITM()");
-		LinkedHashMap<String, String> finaloaitmMap = generateOAITM(oaitmdto);
-		String response = restclient.invokeRest(finaloaitmMap);
+	public String createOAITMInvokeGlobalDataFeedAPI(OaitmDTO oaitmdto) throws StockAnalyzerException {
+		LOGGER.debug("Entering StockDataAnalyzerServiceImpl.class createOAITMInvokeGlobalDataFeedAPI()");
+		String response = "";
+		try {
+			LinkedHashMap<String, String> finaloaitmMap = generateOAITM(oaitmdto);
+			response = restclient.invokeRest(finaloaitmMap);
+		} catch (StockAnalyzerException e) {
+			LOGGER.error("Error while calcuating oaitm : {}", e.getMessage());
+			throw e;
+		}
 		return response;
 
 	}
@@ -189,14 +239,12 @@ public class StockDataAnalyzerServiceImpl implements StockDataAnalyzerService {
 		Integer peDown = oaitmdto.getPeDown();
 		Integer futurePrice = oaitmdto.getLtp();
 		Integer stepSize = oaitmdto.getStepSize();
-		finaloaitmMap
-				.putAll(findOAITM(symbool, expiryDate, PE, peDown, StockAnalyzerConstant.DOWN, futurePrice, stepSize));
+		finaloaitmMap.putAll(findOAITM(symbool, expiryDate, PE, peDown, StockAnalyzerConstant.DOWN, futurePrice, stepSize));
 		finaloaitmMap.putAll(findOAITM(symbool, expiryDate, PE, peUp, StockAnalyzerConstant.UP, futurePrice, stepSize));
 		PE = StockAnalyzerConstant.CE;
 		Integer ceUp = oaitmdto.getCeUP();
 		Integer ceDown = oaitmdto.getCeDown();
-		finaloaitmMap
-				.putAll(findOAITM(symbool, expiryDate, PE, ceDown, StockAnalyzerConstant.DOWN, futurePrice, stepSize));
+		finaloaitmMap.putAll(findOAITM(symbool, expiryDate, PE, ceDown, StockAnalyzerConstant.DOWN, futurePrice, stepSize));
 		finaloaitmMap.putAll(findOAITM(symbool, expiryDate, PE, ceUp, StockAnalyzerConstant.UP, futurePrice, stepSize));
 		return finaloaitmMap;
 	}
@@ -284,52 +332,116 @@ public class StockDataAnalyzerServiceImpl implements StockDataAnalyzerService {
 
 	/**
 	 * @return
-	 * @throws IOException 
-	 * @throws JSONException 
-	 * @throws JsonMappingException 
-	 * @throws JsonParseException 
+	 * @throws IOException
+	 * @throws JSONException
+	 * @throws JsonMappingException
+	 * @throws JsonParseException
+	 * @throws StockAnalyzerException
 	 */
 	@Override
-	public String createoaitmFromWatchList() throws JsonParseException, JsonMappingException, JSONException, IOException {
+	public String createoaitmFromWatchList() throws StockAnalyzerException {
 		LOGGER.debug("Entering StockDataAnalyzerServiceImpl.class createoaitmFromWatchList()");
-		List<Document> docList=stockAnalyzerDAO.createoaitmFromWatchList();
-		StringBuffer sbf = new StringBuffer();
-		docList.parallelStream().filter(doc -> doc.containsKey(StockAnalyzerConstant.WATHCLIST))
-			.forEach(doc -> sbf.append((doc.toJson())));
-		JSONObject array = new JSONObject(sbf.toString());
-		ObjectMapper mapper = new ObjectMapper(); 
-		OaitmDTO[] oaitmdtoArray = mapper.readValue(array.getJSONArray(StockAnalyzerConstant.WATHCLIST).toString(), OaitmDTO[].class); 
-		LinkedHashMap<String, String> finaloaitmMap = new LinkedHashMap<String, String>();
-		for(OaitmDTO oaitmdto : oaitmdtoArray) {
-			finaloaitmMap.putAll(generateOAITM(oaitmdto));
-		 }
-		 String response = restclient.invokeRest(finaloaitmMap);
-		 stockAnalyzerDAO.saveFilteredSymbool(response);
-		return response;
+		String finalResponse = null;
+		try {
+			List<Document> docList = stockAnalyzerDAO.createoaitmFromWatchList();
+			StringBuffer sbf = new StringBuffer();
+			docList.parallelStream().filter(doc -> doc.containsKey(StockAnalyzerConstant.WATHCLIST))
+					.forEach(doc -> sbf.append((doc.toJson())));
+			JSONObject array = new JSONObject(sbf.toString());
+			ObjectMapper mapper = new ObjectMapper();
+			OaitmDTO[] oaitmdtoArray;
+			oaitmdtoArray = mapper.readValue(array.getJSONArray(StockAnalyzerConstant.WATHCLIST).toString(),
+					OaitmDTO[].class);
+			LinkedHashMap<String, String> finaloaitmMap = new LinkedHashMap<String, String>();
+			for (OaitmDTO oaitmdto : oaitmdtoArray) {
+				finaloaitmMap.putAll(generateOAITM(oaitmdto));
+			}
+			String response = restclient.invokeRest(finaloaitmMap);
+			if (isJSONValid(response)) {
+				finalResponse = filterData(response);
+			} else {
+
+			}
+			stockAnalyzerDAO.saveFilteredSymbool(finalResponse);
+		} catch (JSONException | IOException e) {
+			LOGGER.error("Error while calcualting from wathclist and calling Gloabldatafeed api :{}", e.getMessage());
+			errormsgConfig.setMsg(e.getLocalizedMessage());
+			throw new CustomJsonException(errormsgConfig.getErrservicecode2(),errormsgConfig.getMsg());
+		} catch (StockAnalyzerException e) {
+			LOGGER.error("Error while calcualting from wathclist and calling Gloabldatafeed api : {}", e.getMessage());
+			throw e;
+		}
+		return finalResponse;
 	}
 
 	/**
 	 * @return
-	 * @throws IOException 
-	 * @throws JSONException 
-	 * @throws JsonMappingException 
-	 * @throws JsonParseException 
+	 * @throws IOException
+	 * @throws JSONException
+	 * @throws JsonMappingException
+	 * @throws JsonParseException
 	 */
 	@Override
-	public String getLastQuoteArrayForFilteredSymbol() throws JsonParseException, JsonMappingException, JSONException, IOException {
+	public String getLastQuoteArrayForFilteredSymbol() throws StockAnalyzerException {
 		LOGGER.debug("Entering StockDataAnalyzerServiceImpl.class getLastQuoteArrayForFilteredSymbol()");
-		List<Document>docList=stockAnalyzerDAO.getFilteredSymbol();
-		StringBuffer sbf = new StringBuffer();
-		docList.parallelStream().filter(doc -> doc.containsKey(StockAnalyzerConstant.SYMBOLLIST))
-				.forEach(doc -> sbf.append((doc.toJson())));
-		JSONObject array = new JSONObject(sbf.toString());
-		JSONArray jsonArray= array.getJSONArray(StockAnalyzerConstant.SYMBOLLIST);
-		List<String> urlList=new ArrayList<String>();
-		 for(Object json : jsonArray) {
-			 urlList.add(restclient.createUrl(json.toString()));
-		 }
-		String response= restclient.invokeGlobalDataFeedAPI(urlList);
+		String response = "";
+		try {
+			List<Document> docList = stockAnalyzerDAO.getFilteredSymbol();
+			StringBuffer sbf = new StringBuffer();
+			docList.parallelStream().filter(doc -> doc.containsKey(StockAnalyzerConstant.SYMBOLLIST))
+					.forEach(doc -> sbf.append((doc.toJson())));
+			JSONObject array = new JSONObject(sbf.toString());
+			JSONArray jsonArray = array.getJSONArray(StockAnalyzerConstant.SYMBOLLIST);
+			List<String> urlList = new ArrayList<String>();
+			for (Object json : jsonArray) {
+				urlList.add(restclient.createUrl(json.toString()));
+			}
+			response = restclient.invokeGlobalDataFeedAPI(urlList);
+		} catch (JSONException e) {
+			LOGGER.error("Error in getLastQuoteArrayForFilteredSymbol : {}", e.getMessage());
+			errormsgConfig.setMsg(e.getLocalizedMessage());
+			throw new CustomJsonException(errormsgConfig.getErrservicecode1(),errormsgConfig.getMsg());
+		} catch (StockAnalyzerException e) {
+			LOGGER.error("Error in getLastQuoteArrayForFilteredSymbol : {}", e.getMessage());
+			throw e;
+		}
 		return response;
 	}
 
+	/**
+	 * @param test
+	 * @return
+	 */
+	public boolean isJSONValid(String test) {
+		try {
+			new JSONObject(test);
+		} catch (JSONException ex) {
+			try {
+				new JSONArray(test);
+			} catch (JSONException ex1) {
+				return false;
+			}
+		}
+		return true;
 	}
+
+	/**
+	 * @param jsonData
+	 * @return
+	 */
+	public String filterData(String jsonData) {
+		LOGGER.debug("Entering RestClient.class filterData()");
+		JSONArray jsonArray = new JSONArray(jsonData);
+		List<String> jsonObjectList = IntStream.range(0, jsonArray.length()).mapToObj(i -> jsonArray.getJSONObject(i))
+				.filter(p -> (Double.valueOf(p.optString("LASTTRADEPRICE"))) > 50
+						&& (Double.valueOf(p.optString("LASTTRADEPRICE")) < 550))
+				.map(p -> p.optString("INSTRUMENTIDENTIFIER")).collect(Collectors.toList());
+
+		JSONArray jsonArray1 = new JSONArray();
+		JSONObject jsonobj = new JSONObject();
+		jsonObjectList.stream().forEach(s -> jsonArray1.put(s));
+		jsonobj.put("symbolName", jsonArray1);
+		return jsonobj.toString();
+	}
+
+}

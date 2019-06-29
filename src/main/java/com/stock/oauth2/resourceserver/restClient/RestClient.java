@@ -14,19 +14,17 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import com.stock.oauth2.resourceserver.config.ErrorCodeMsgConstant;
 import com.stock.oauth2.resourceserver.config.YAMLConfig;
+import com.stock.oauth2.resourceserver.exception.StockAnalyzerException;
+import com.stock.oauth2.resourceserver.util.CommonUtility;
 
 /**
  * @author shriram
@@ -47,11 +45,22 @@ public class RestClient {
 	 */
 	@Autowired
 	YAMLConfig config;
+	
+	/**
+	 * 
+	 */
+	@Autowired
+	CommonUtility commonUtility;
 
 	/**
 	 * 
 	 */
-	private final static int MAX_THREAD = 15;
+	@Autowired
+	ErrorCodeMsgConstant errormsgConfig;
+	/**
+	 * 
+	 */
+	private final static int MAX_THREAD = 20;
 
 	/**
 	 * Logger Object
@@ -61,17 +70,20 @@ public class RestClient {
 	/**
 	 * @param finaloaitmMap
 	 */
-	public String invokeRest(LinkedHashMap<String, String> finaloaitmMap) {
+	public String invokeRest(LinkedHashMap<String, String> finaloaitmMap)throws StockAnalyzerException  {
 		LOGGER.debug("Entering RestClient.class invokeRest()");
 		List<String> urlList = createRequest(finaloaitmMap);
 		return invokeGlobalDataFeedAPI(urlList);
 	}
 
-	public String invokeGlobalDataFeedAPI(List<String> urlList) {
+	/**
+	 * @param urlList
+	 * @return
+	 */
+	public String invokeGlobalDataFeedAPI(List<String> urlList) throws StockAnalyzerException {
 		LOGGER.debug("Entering RestClient.class invokeGlobalDataFeedAPI()");
 		Collection<Callable<String>> tasks = new ArrayList<>();
 		StringBuilder sbfResults = new StringBuilder();
-		String response = null;
 		try {
 			for (String url : urlList) {
 				tasks.add(new Task(url));
@@ -80,16 +92,16 @@ public class RestClient {
 			List<Future<String>> results;
 			results = executor.invokeAll(tasks);
 			for (Future<String> tempResult : results) {
-				if(isJSONValid(tempResult.get())) {
-					sbfResults.append(tempResult.get());
-				}
+				sbfResults.append(tempResult.get());
 			}
 			executor.shutdown();
-			response=filterData(sbfResults.toString());
 		} catch (InterruptedException | ExecutionException e) {
 			LOGGER.error("Exception invokeGlobalDataFeedAPI() {}",e.getMessage());
+			errormsgConfig.setMsg(e.getLocalizedMessage());
+			String errorResponse=commonUtility.createErrorResponse(errormsgConfig.getErrrestcode1(), errormsgConfig.getMsg());
+			throw new StockAnalyzerException(errorResponse);
 		}
-		return response;
+		return sbfResults.toString();
 	}
 
 	/**
@@ -156,53 +168,14 @@ public class RestClient {
 
 	private final class Task implements Callable<String> {
 		private final String fURL;
-
 		Task(String aURL) {
 			fURL = aURL;
 		}
-
 		/** Access a URL, and see if you get a healthy response. */
 		@Override
 		public String call() throws Exception {
 			return restTemplate.getForObject(fURL, String.class);
 		}
 
-	}
-
-	/**
-	 * @param jsonData
-	 * @return
-	 */
-	public String filterData(String jsonData) {
-	    JSONArray jsonArray= new JSONArray(jsonData);
-	    List<String> jsonObjectList = IntStream
-	    		     .range(0,jsonArray.length())
-	    		     .mapToObj(i -> jsonArray.getJSONObject(i)).filter(p -> (Double.valueOf(p.optString("LASTTRADEPRICE")))>3
-	                 		&& (Double.valueOf(p.optString("LASTTRADEPRICE"))<550))
-	                 .map(p->p.optString("INSTRUMENTIDENTIFIER"))
-	                 .collect(Collectors.toList());
-	  
-	    JSONArray jsonArray1= new JSONArray();
-	    JSONObject jsonobj= new JSONObject();
-	    jsonObjectList.stream().forEach(s -> jsonArray1.put(s));
-	    jsonobj.put("symbolName", jsonArray1);
-		return jsonobj.toString();
-	}
-	
-	/**
-	 * @param test
-	 * @return
-	 */
-	public  boolean isJSONValid(String test) {
-	    try {
-	        new JSONObject(test);
-	    } catch (JSONException ex) {
-	        try {
-	            new JSONArray(test);
-	        } catch (JSONException ex1) {
-	            return false;
-	        }
-	    }
-	    return true;
 	}
 }

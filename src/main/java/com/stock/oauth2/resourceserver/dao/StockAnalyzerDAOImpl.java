@@ -17,12 +17,15 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Component;
 
 import com.mongodb.client.result.DeleteResult;
+import com.stock.oauth2.resourceserver.config.ErrorCodeMsgConstant;
 import com.stock.oauth2.resourceserver.domain.Dbcollection;
 import com.stock.oauth2.resourceserver.domain.Oaitm;
 import com.stock.oauth2.resourceserver.domain.Stock;
 import com.stock.oauth2.resourceserver.domain.Strategy;
 import com.stock.oauth2.resourceserver.domain.TickerData;
+import com.stock.oauth2.resourceserver.exception.StockAnalyzerException;
 import com.stock.oauth2.resourceserver.mongoconfig.MongoConfig;
+import com.stock.oauth2.resourceserver.util.CommonUtility;
 
 /**
  * DAO layer to perform mongocurd operation using mongoTemplate
@@ -40,6 +43,18 @@ public class StockAnalyzerDAOImpl implements StockAnalyzerDAO {
 	 */
 	@Autowired
 	MongoTemplate mongoTemplate;
+
+	/**
+	 * 
+	 */
+	@Autowired
+	CommonUtility commonUtility;
+
+	/**
+	 * 
+	 */
+	@Autowired
+	ErrorCodeMsgConstant errormsgConfig;
 
 	@Override
 	public void saveStockOneMinData(Stock stock) {
@@ -63,10 +78,17 @@ public class StockAnalyzerDAOImpl implements StockAnalyzerDAO {
 	 * @return
 	 */
 	@Override
-	public String createWatchList(String watchListJson) {
+	public String createWatchList(String watchListJson) throws StockAnalyzerException {
 		LOGGER.debug("Entering StockAnalyzerDAOImpl.class createStrategy()");
-		Document document = new Document(Document.parse(watchListJson));
-		Document outputDoc = mongoTemplate.save(document, "WatchList");
+		Document outputDoc = null;
+		try {
+			Document document = new Document(Document.parse(watchListJson));
+			outputDoc = mongoTemplate.save(document, "WatchList");
+		} catch (Exception e) {
+			String errorResponse = commonUtility.createErrorResponse(errormsgConfig.getErrdaocode5(),
+					errormsgConfig.getMsgdao5());
+			throw new StockAnalyzerException(errorResponse);
+		}
 		return outputDoc.toJson();
 
 	}
@@ -114,13 +136,19 @@ public class StockAnalyzerDAOImpl implements StockAnalyzerDAO {
 	 * @param dbcollection
 	 */
 	@Override
-	public void createCollection(Dbcollection dbcollection) {
-		dbcollection.getCollectionNames().forEach((k, v) -> {
-			System.out.println("Item : " + k + " Count : " + v);
-			if (v != null) {
-				mongoTemplate.createCollection(v);
-			}
-		});
+	public void createCollection(Dbcollection dbcollection) throws StockAnalyzerException {
+		try {
+			dbcollection.getCollectionNames().forEach((k, v) -> {
+				System.out.println("Item : " + k + " Count : " + v);
+				if (v != null) {
+					mongoTemplate.createCollection(v);
+				}
+			});
+		} catch (Exception e) {
+			String errorResponse = commonUtility.createErrorResponse(errormsgConfig.getErrdaocode4(),
+					errormsgConfig.getMsgdao4());
+			throw new StockAnalyzerException(errorResponse);
+		}
 	}
 
 	/**
@@ -147,31 +175,52 @@ public class StockAnalyzerDAOImpl implements StockAnalyzerDAO {
 	 * @return
 	 */
 	@Override
-	public List<Document> createoaitmFromWatchList() {
-	  LOGGER.debug("Entering StockAnalyzerDAOImpl.class createoaitmFromWatchList()");
-	   ArrayList<Document> docList =mongoTemplate.getCollection("WatchList").find().into(new ArrayList<Document>());
-	   return docList;
+	public List<Document> createoaitmFromWatchList() throws StockAnalyzerException {
+		LOGGER.debug("Entering StockAnalyzerDAOImpl.class createoaitmFromWatchList()");
+		ArrayList<Document> docList = null;
+		try {
+			docList = mongoTemplate.getCollection("WatchList").find().into(new ArrayList<Document>());
+		} catch (Exception e) {
+			String errorResponse = commonUtility.createErrorResponse(errormsgConfig.getErrdaocode3(),
+					errormsgConfig.getMsgdao3());
+			throw new StockAnalyzerException(errorResponse);
+		}
+		return docList;
 	}
 
 	@Override
-	public String saveFilteredSymbool(String filteredSymbool) {
+	public String saveFilteredSymbool(String filteredSymbool) throws StockAnalyzerException {
 		LOGGER.debug("Entering StockAnalyzerDAOImpl.class saveFilteredSymbool()");
-		Document document = new Document(Document.parse(filteredSymbool));
-		Document outputDoc = mongoTemplate.save(document, "SymboolList");
-	    return outputDoc.toJson(); 
-		
-		
+		Document outputDoc;
+		try {
+			Document document = new Document(Document.parse(filteredSymbool));
+			outputDoc = mongoTemplate.save(document, "SymboolList");
+		} catch (Exception e) {
+			String errorResponse = commonUtility.createErrorResponse(errormsgConfig.getErrdaocode2(),
+					errormsgConfig.getMsgdao2());
+			throw new StockAnalyzerException(errorResponse);
+		}
+		return outputDoc.toJson();
+
 	}
 
 	/**
 	 * Fetch saved filtered symbol list
 	 * 
 	 * @return
+	 * @throws StockAnalyzerException
 	 */
 	@Override
-	public List<Document> getFilteredSymbol() {
-		LOGGER.debug("Entering StockAnalyzerDAOImpl.class getFilteredSymbol()");
-		ArrayList<Document> docList = mongoTemplate.getCollection("SymboolList").find().into(new ArrayList<Document>());
+	public List<Document> getFilteredSymbol() throws StockAnalyzerException {
+		ArrayList<Document> docList =null;
+		try {
+			LOGGER.debug("Entering StockAnalyzerDAOImpl.class getFilteredSymbol()");
+			docList = mongoTemplate.getCollection("SymboolList").find().into(new ArrayList<Document>());
+		} catch (Exception e) {
+			String errorResponse = commonUtility.createErrorResponse(errormsgConfig.getErrdaocode1(),
+					errormsgConfig.getMsgdao1());
+			throw new StockAnalyzerException(errorResponse);
+		}
 		return docList;
 	}
 

@@ -4,8 +4,6 @@
 **/
 package com.stock.oauth2.resourceserver.web;
 
-import java.io.IOException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,23 +11,17 @@ import org.springframework.boot.configurationprocessor.json.JSONException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.validation.BeanPropertyBindingResult;
-import org.springframework.validation.ValidationUtils;
-import org.springframework.validation.Validator;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.stock.oauth2.resourceserver.config.ErrorCodeMsgConstant;
 import com.stock.oauth2.resourceserver.constant.StockAnalyzerConstant;
 import com.stock.oauth2.resourceserver.domain.Dbcollection;
 import com.stock.oauth2.resourceserver.domain.Stock;
-import com.stock.oauth2.resourceserver.domain.Strategy;
-import com.stock.oauth2.resourceserver.domain.TickerData;
 import com.stock.oauth2.resourceserver.dto.OaitmDTO;
-import com.stock.oauth2.resourceserver.exception.ApiError;
+import com.stock.oauth2.resourceserver.exception.StockAnalyzerException;
 import com.stock.oauth2.resourceserver.restClient.RestClient;
 import com.stock.oauth2.resourceserver.service.StockDataAnalyzerService;
 import com.stock.oauth2.resourceserver.util.CommonUtility;
@@ -69,78 +61,35 @@ public class StockDataAnalyzerController {
 	 */
 	@Autowired
 	CommonUtility commonUtility;
+	
+	@Autowired
+	ErrorCodeMsgConstant errormsgConfig;
 
+	 public static final String ROLE_ADMIN = "ROLE_ADMIN";
+	    public static final String ROLE_USER = "ROLE_USER";
 	/**
 	 * Logger Object
 	 */
 	private static final Logger LOGGER = LoggerFactory.getLogger(StockDataAnalyzerController.class);
-
-	/**
-	 * @param stock
-	 * @return
-	 */
-	@PreAuthorize(StockAnalyzerConstant.OAUTH)
-	@PostMapping(value = "/stockData")
-	public ResponseEntity<Stock> addStockData(@RequestBody Stock stock) {
-		LOGGER.debug("Entering StockDataAnalyzerController.class addStockData()");
-		stockDataAnalyzerService.saveStockOneMinData(stock);
-		return new ResponseEntity<Stock>(stock, HttpStatus.OK);
-	}
-
-	/**
-	 * @param tickData
-	 * @return
-	 */
-	@PreAuthorize(StockAnalyzerConstant.OAUTH)
-	@PostMapping(path = "/stockTickData", consumes = StockAnalyzerConstant.CONTENTTYPE, produces = StockAnalyzerConstant.CONTENTTYPE)
-	public ResponseEntity<TickerData> addStockTickData(@RequestBody TickerData tickData) {
-		LOGGER.debug("Entering StockDataAnalyzerController.class addStockTickData()");
-		stockDataAnalyzerService.saveStockTickData(tickData);
-		return new ResponseEntity<TickerData>(tickData, HttpStatus.OK);
-	}
-
 	/**
 	 * Create the doc
 	 * 
 	 * @param request
 	 * @return
+	 * @throws StockAnalyzerException 
 	 */
 	@PreAuthorize(StockAnalyzerConstant.OAUTH)
 	@PostMapping(path = "/createWatchList", consumes = StockAnalyzerConstant.CONTENTTYPE, produces = StockAnalyzerConstant.CONTENTTYPE)
-	public ResponseEntity<String> createStrategy(@RequestBody String request) {
+	public ResponseEntity<String> createStrategy(@RequestBody String request) throws StockAnalyzerException {
 		LOGGER.debug("Entering StockDataAnalyzerController.class createStrategy()");
-		stockDataAnalyzerService.createWatchList(request);
-		return new ResponseEntity<String>(request, HttpStatus.OK);
-	}
-
-	/**
-	 * 
-	 * Update the document
-	 * 
-	 * @param strategy
-	 * @return
-	 */
-	@PreAuthorize(StockAnalyzerConstant.OAUTH)
-	@PutMapping(path = "/update", consumes = StockAnalyzerConstant.CONTENTTYPE, produces = StockAnalyzerConstant.CONTENTTYPE)
-	public ResponseEntity<Strategy> updateStrategy(@RequestBody Strategy strategy) {
-		LOGGER.debug("Entering StockDataAnalyzerController.class updateStrategy()");
-		stockDataAnalyzerService.updateStrategy(strategy);
-		return new ResponseEntity<Strategy>(strategy, HttpStatus.OK);
-	}
-
-	/**
-	 * 
-	 * Search strategy
-	 * 
-	 * @param strategy
-	 * @return
-	 */
-	@PreAuthorize(StockAnalyzerConstant.OAUTH)
-	@GetMapping(path = "/search/{key}", consumes = StockAnalyzerConstant.CONTENTTYPE, produces = StockAnalyzerConstant.CONTENTTYPE)
-	public ResponseEntity<Strategy> searchStrategy(@PathVariable("key") String key) {
-		LOGGER.debug("Entering StockDataAnalyzerController.class searchStrategy()");
-		Strategy strategy = stockDataAnalyzerService.searchStrategy(key);
-		return new ResponseEntity<Strategy>(strategy, HttpStatus.OK);
+        String isValid= commonUtility.validateJson(StockAnalyzerConstant.WATHLIST_SCHEMA, request);
+        String response = null;
+		if(StockAnalyzerConstant.ISTURE.equals(isValid)) {
+		 response= stockDataAnalyzerService.createWatchList(request);
+		}else {
+			response=isValid;
+		}
+		return new ResponseEntity<String>(response, HttpStatus.OK);
 	}
 
 	/**
@@ -148,45 +97,36 @@ public class StockDataAnalyzerController {
 	 * 
 	 * @param strategy
 	 * @return
+	 * @throws StockAnalyzerException 
 	 */
 	@PreAuthorize(StockAnalyzerConstant.OAUTH)
 	@PostMapping(path = "/createCollection", consumes = StockAnalyzerConstant.CONTENTTYPE, produces = StockAnalyzerConstant.CONTENTTYPE)
-	public ResponseEntity<String> createCollection(@RequestBody Dbcollection collection) {
+	public ResponseEntity<String> createCollection(@RequestBody Dbcollection collection) throws StockAnalyzerException {
 		LOGGER.debug("Entering StockDataAnalyzerController.class createCollection()");
 		stockDataAnalyzerService.createCollection(collection);
 		return new ResponseEntity<String>("", HttpStatus.OK);
 	}
-
-	/**
-	 * @param tickData
-	 * @return
-	 */
-	@PreAuthorize(StockAnalyzerConstant.OAUTH)
-	@GetMapping(value = "/stockData/{ticker}")
-	public ResponseEntity<Stock> getStockTickDataByName(@PathVariable("ticker") String ticker) {
-		LOGGER.debug("Entering StockDataAnalyzerController.class getStockTickDataByName()");
-		Stock stock = stockDataAnalyzerService.findStockOneMinData(ticker);
-		return new ResponseEntity<Stock>(stock, HttpStatus.OK);
-	}
-
 	/**
 	 * Find OTM,ATM,ITM
 	 * 
 	 * @param strategy
 	 * @return
 	 * @throws JSONException
+	 * @throws StockAnalyzerException 
 	 */
 	@PreAuthorize(StockAnalyzerConstant.OAUTH)
-	@PostMapping(path = "/oaitm", consumes = StockAnalyzerConstant.CONTENTTYPE, produces = StockAnalyzerConstant.CONTENTTYPE)
-	public ResponseEntity<?> findOAITM(@RequestBody OaitmDTO oaitmDTO) throws JSONException {
+	@PostMapping(path = "/FetchSymbolDataFromGdfAPI", consumes = StockAnalyzerConstant.CONTENTTYPE, produces = StockAnalyzerConstant.CONTENTTYPE)
+	public ResponseEntity<?> createOaitmFetchDataFromGdfAPI(@RequestBody OaitmDTO oaitmDTO) throws JSONException, StockAnalyzerException {
 		LOGGER.debug("Entering StockDataAnalyzerController.class findOAITM()");
-		ApiError apiError =checkRequest(validator, oaitmDTO, "OaitmDTO");
-		if(apiError.getStatus()!=null && HttpStatus.ACCEPTED.equals(apiError.getStatus())){
-			String response = stockDataAnalyzerService.createAndSaveOAITM(oaitmDTO);
-			return new ResponseEntity<String>(response, HttpStatus.OK);
+		String isValid =commonUtility.checkRequest(validator, oaitmDTO, "OaitmDTO");
+		String response="";
+		if(StockAnalyzerConstant.ISTURE.equals(isValid)){
+			 response = stockDataAnalyzerService.createOAITMInvokeGlobalDataFeedAPI(oaitmDTO);
 		}else {
-			return new ResponseEntity<ApiError>(apiError, HttpStatus.OK);
+			response=isValid;
 		}
+		return new ResponseEntity<String>(response, HttpStatus.OK);
+
 	}
 
 	/**
@@ -195,17 +135,13 @@ public class StockDataAnalyzerController {
 	 * @param strategy
 	 * @return
 	 * @throws JSONException
+	 * @throws StockAnalyzerException 
 	 */
 	@PreAuthorize(StockAnalyzerConstant.OAUTH)
-	@GetMapping(path = "/getOAITM", consumes = StockAnalyzerConstant.CONTENTTYPE, produces = StockAnalyzerConstant.CONTENTTYPE)
-	public ResponseEntity<?> createOaitmFromWatchList() throws JSONException {
-		LOGGER.debug("Entering StockDataAnalyzerController.class createRequestFromWatchList()");
-		String response="";
-		try {
-			 response=stockDataAnalyzerService.createoaitmFromWatchList();
-		} catch (org.json.JSONException | IOException e) {
-			e.printStackTrace();
-		}
+	@GetMapping(path = "/findFilterdSymbol", consumes = StockAnalyzerConstant.CONTENTTYPE, produces = StockAnalyzerConstant.CONTENTTYPE)
+	public ResponseEntity<?> calOaitmFromWatchListAndInvokeGdfApi() throws JSONException, StockAnalyzerException {
+		LOGGER.debug("Entering StockDataAnalyzerController.class calOaitmFromWatchListAndInvokeGdfApi()");
+		String response=stockDataAnalyzerService.createoaitmFromWatchList();
 		return new ResponseEntity<String>(response, HttpStatus.OK);
 	}
 	
@@ -214,18 +150,14 @@ public class StockDataAnalyzerController {
 	 * 
 	 * @param strategy
 	 * @return
+	 * @throws StockAnalyzerException 
 	 * @throws JSONException
 	 */
 	@PreAuthorize(StockAnalyzerConstant.OAUTH)
 	@GetMapping(path = "/GetLastQuoteArrayForFilteredSymbol", consumes = StockAnalyzerConstant.CONTENTTYPE, produces = StockAnalyzerConstant.CONTENTTYPE)
-	public ResponseEntity<?> getLastQuoteArrayForFilteredSymbol() {
+	public ResponseEntity<?> getLastQuoteArrayForFilteredSymbol() throws StockAnalyzerException {
 		LOGGER.debug("Entering StockDataAnalyzerController.class GetLastQuoteArrayForFilteredSymbol()");
-		String response="";
-		try {
-			 response=stockDataAnalyzerService.getLastQuoteArrayForFilteredSymbol();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		String response=stockDataAnalyzerService.getLastQuoteArrayForFilteredSymbol();
 		return new ResponseEntity<String>(response, HttpStatus.OK);
 		
 	}
@@ -244,23 +176,5 @@ public class StockDataAnalyzerController {
 		return new ResponseEntity<Stock>(stock, HttpStatus.OK);
 	}
 
-	/**
-	 * @param validatorObj
-	 * @param pojo
-	 * @param pojoName
-	 * @return
-	 */
-	public ApiError checkRequest(Validator validatorObj, Object pojo, String pojoName) {
-		BeanPropertyBindingResult result = new BeanPropertyBindingResult(pojo, "OaitmDTO");
-		ValidationUtils.invokeValidator(validatorObj, pojo, result);
-		ApiError apiError = null;
-		if (result.hasErrors()) {
-			apiError = new ApiError(HttpStatus.BAD_REQUEST, "Input are not valid", result.getAllErrors());
-		} else {
-			apiError = new ApiError(HttpStatus.ACCEPTED, "Request is Valid");
-
-		}
-		return apiError;
-	}
 	
 }

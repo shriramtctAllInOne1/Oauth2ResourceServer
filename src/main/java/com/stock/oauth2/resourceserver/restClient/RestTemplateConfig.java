@@ -13,6 +13,8 @@ import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.web.client.RestTemplate;
 
+import com.stock.oauth2.resourceserver.constant.StockAnalyzerConstant;
+
 @Configuration
 public class RestTemplateConfig {
 
@@ -34,7 +36,7 @@ public class RestTemplateConfig {
 	public TaskScheduler taskScheduler() {
 		ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
 		scheduler.setThreadNamePrefix("poolScheduler");
-		scheduler.setPoolSize(50);
+		scheduler.setPoolSize(StockAnalyzerConstant.MAX_TOTAL_CONNECTIONS);
 		return scheduler;
 	}
 }

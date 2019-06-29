@@ -1,6 +1,5 @@
 package com.stock.oauth2.resourceserver.exception;
 
-import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;

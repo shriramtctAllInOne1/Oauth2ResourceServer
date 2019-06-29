@@ -37,10 +37,12 @@ constant:
    resourceId: oauth
    urlPattern: /**
    accessPattern: "#oauth2.hasScope('read')"
-   baseUrl : http://nimblerest.lisuns.com:4531
+   baseUrl : http://test1.lisuns.com:4531
    accessKey : 356e6624-cdda-4d8f-af5b-8f95ea19a5e3
    apiName : GetLastQuoteArray
    exchange : NFO
+   
+
    
    
 logging:

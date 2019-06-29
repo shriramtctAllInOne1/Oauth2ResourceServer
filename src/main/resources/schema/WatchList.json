@@ -1,0 +1,111 @@
+{
+  "definitions": {},
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/root.json",
+  "type": "object",
+  "title": "The Root Schema",
+  "required": [
+    "WatchList1"
+  ],
+  "properties": {
+    "WatchList1": {
+      "$id": "#/properties/WatchList1",
+      "type": "array",
+      "title": "The Watchlist1 Schema",
+      "items": {
+        "$id": "#/properties/WatchList1/items",
+        "type": "object",
+        "title": "The Items Schema",
+        "required": [
+          "symbolName",
+          "expiryDate",
+          "peUp",
+          "peDown",
+          "ceUP",
+          "ceDown",
+          "stepSize",
+          "ltp"
+        ],
+        "properties": {
+          "symbolName": {
+            "$id": "#/properties/WatchList1/items/properties/symbolName",
+            "type": "string",
+            "title": "The Symbolname Schema",
+            "default": "",
+            "minLength": 1,
+            "pattern": "^(.*)$"
+          },
+          "expiryDate": {
+            "$id": "#/properties/WatchList1/items/properties/expiryDate",
+            "type": "array",
+            "title": "The Expirydate Schema",
+            "default": null,
+            "minItems": 1,
+            "items": {
+              "$id": "#/properties/WatchList1/items/properties/expiryDate/items",
+              "type": "string",
+              "title": "The Items Schema",
+              "default": "",
+              "examples": [
+                "27JUN19",
+                "04JUL19",
+                "11JUL19",
+                "18JUL19",
+                "25JUL19",
+                "01AUG19",
+                "08AUG19",
+                "15AUG19",
+                "22AUG19",
+                "29AUG19"
+              ],
+              "minLength": 1,
+              "pattern": "^(.*)$"
+            }
+          },
+          "peUp": {
+            "$id": "#/properties/WatchList1/items/properties/peUp",
+            "type": "integer",
+            "title": "The Peup Schema",
+            "default": 0,
+            "minimum": 1.0
+          },
+          "peDown": {
+            "$id": "#/properties/WatchList1/items/properties/peDown",
+            "type": "integer",
+            "title": "The Pedown Schema",
+            "default": 0,
+            "minimum": 0.0
+          },
+          "ceUP": {
+            "$id": "#/properties/WatchList1/items/properties/ceUP",
+            "type": "integer",
+            "title": "The Ceup Schema",
+            "default": 0,
+            "minimum": 0.0
+          },
+          "ceDown": {
+            "$id": "#/properties/WatchList1/items/properties/ceDown",
+            "type": "integer",
+            "title": "The Cedown Schema",
+            "default": 0,
+            "minimum": 0.0
+          },
+          "stepSize": {
+            "$id": "#/properties/WatchList1/items/properties/stepSize",
+            "type": "integer",
+            "title": "The Stepsize Schema",
+            "default": 0,
+            "minimum": 0.0
+          },
+          "ltp": {
+            "$id": "#/properties/WatchList1/items/properties/ltp",
+            "type": "integer",
+            "title": "The Ltp Schema",
+            "default": 0,
+            "minimum": 0.0
+          }
+        }
+      }
+    }
+  }
+}

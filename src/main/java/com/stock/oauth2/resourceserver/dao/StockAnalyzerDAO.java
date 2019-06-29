@@ -14,6 +14,7 @@ import com.stock.oauth2.resourceserver.domain.Oaitm;
 import com.stock.oauth2.resourceserver.domain.Stock;
 import com.stock.oauth2.resourceserver.domain.Strategy;
 import com.stock.oauth2.resourceserver.domain.TickerData;
+import com.stock.oauth2.resourceserver.exception.StockAnalyzerException;
 
 /**
  * 
@@ -53,7 +54,7 @@ public interface StockAnalyzerDAO {
 	 * @param stockdto
 	 * @return
 	 */
-	String createWatchList(String watchListJson);
+	String createWatchList(String watchListJson) throws StockAnalyzerException;
 
 	/**
 	 * Update strategy
@@ -79,10 +80,12 @@ public interface StockAnalyzerDAO {
 	 */
 	DeleteResult deleteStrategy(String strategyName);
 	
+	
 	/**
 	 * @param dbcollection
+	 * @throws StockAnalyzerException
 	 */
-	void createCollection(Dbcollection dbcollection);
+	void createCollection(Dbcollection dbcollection) throws StockAnalyzerException;
 	
 	/**
 	 * @param oaitm
@@ -90,20 +93,27 @@ public interface StockAnalyzerDAO {
 	void saveOATIMData(Oaitm oaitm);
 	
 	
+	
+	
 	/**
 	 * @return
+	 * @throws StockAnalyzerException
 	 */
-	List<Document> createoaitmFromWatchList();
+	List<Document> createoaitmFromWatchList() throws StockAnalyzerException;
+	
 	
 	
 	/**
 	 * @param filteredSymbool
+	 * @return
+	 * @throws StockAnalyzerException
 	 */
-	String saveFilteredSymbool(String filteredSymbool);
+	String saveFilteredSymbool(String filteredSymbool) throws StockAnalyzerException;
 
 	/**
 	 * @return
+	 * @throws StockAnalyzerException 
 	 */
-	List<Document> getFilteredSymbol();
+	List<Document> getFilteredSymbol() throws StockAnalyzerException;
 	
 }

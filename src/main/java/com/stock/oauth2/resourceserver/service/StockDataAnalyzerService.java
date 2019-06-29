@@ -16,6 +16,7 @@ import com.stock.oauth2.resourceserver.domain.Stock;
 import com.stock.oauth2.resourceserver.domain.Strategy;
 import com.stock.oauth2.resourceserver.domain.TickerData;
 import com.stock.oauth2.resourceserver.dto.OaitmDTO;
+import com.stock.oauth2.resourceserver.exception.StockAnalyzerException;
 
 /**
  * Service layer to interact with DAO Layer
@@ -38,8 +39,9 @@ public interface StockDataAnalyzerService {
 	/**
 	 * @param watchListJson
 	 * @return
+	 * @throws StockAnalyzerException 
 	 */
-	String createWatchList(String watchListJson);
+	String createWatchList(String watchListJson) throws StockAnalyzerException;
 
 	/**
 	 * @param strategy
@@ -61,8 +63,9 @@ public interface StockDataAnalyzerService {
 
 	/**
 	 * @param dbcollection
+	 * @throws StockAnalyzerException 
 	 */
-	void createCollection(Dbcollection dbcollection);
+	void createCollection(Dbcollection dbcollection) throws StockAnalyzerException;
 	
 	/**
 	 * @param tickerName
@@ -73,8 +76,9 @@ public interface StockDataAnalyzerService {
 	/**
 	 * @param oaitm
 	 * @return
+	 * @throws StockAnalyzerException 
 	 */
-	String createAndSaveOAITM(OaitmDTO oaitm);
+	String createOAITMInvokeGlobalDataFeedAPI(OaitmDTO oaitm) throws StockAnalyzerException;
 	
 	/**
 	 * @return
@@ -82,8 +86,9 @@ public interface StockDataAnalyzerService {
 	 * @throws JSONException 
 	 * @throws JsonMappingException 
 	 * @throws JsonParseException 
+	 * @throws StockAnalyzerException 
 	 */
-	String createoaitmFromWatchList() throws JsonParseException, JsonMappingException, JSONException, IOException;
+	String createoaitmFromWatchList() throws StockAnalyzerException;
 
 	
 	
@@ -93,8 +98,9 @@ public interface StockDataAnalyzerService {
 	 * @throws JSONException 
 	 * @throws JsonMappingException 
 	 * @throws JsonParseException 
+	 * @throws StockAnalyzerException 
 	 */
-	String getLastQuoteArrayForFilteredSymbol() throws JsonParseException, JsonMappingException, JSONException, IOException ;
+	String getLastQuoteArrayForFilteredSymbol() throws StockAnalyzerException ;
 
 
 }
