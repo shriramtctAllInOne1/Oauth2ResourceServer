@@ -138,7 +138,7 @@ public class StockDataAnalyzerController {
 	 * @throws StockAnalyzerException 
 	 */
 	@PreAuthorize(StockAnalyzerConstant.OAUTH)
-	@GetMapping(path = "/findFilterdSymbol", consumes = StockAnalyzerConstant.CONTENTTYPE, produces = StockAnalyzerConstant.CONTENTTYPE)
+	@GetMapping(path = "/admin/findFilterdSymbol", consumes = StockAnalyzerConstant.CONTENTTYPE, produces = StockAnalyzerConstant.CONTENTTYPE)
 	public ResponseEntity<?> calOaitmFromWatchListAndInvokeGdfApi() throws JSONException, StockAnalyzerException {
 		LOGGER.debug("Entering StockDataAnalyzerController.class calOaitmFromWatchListAndInvokeGdfApi()");
 		String response=stockDataAnalyzerService.createoaitmFromWatchList();
@@ -153,8 +153,8 @@ public class StockDataAnalyzerController {
 	 * @throws StockAnalyzerException 
 	 * @throws JSONException
 	 */
-	@PreAuthorize(StockAnalyzerConstant.OAUTH)
-	@GetMapping(path = "/GetLastQuoteArrayForFilteredSymbol", consumes = StockAnalyzerConstant.CONTENTTYPE, produces = StockAnalyzerConstant.CONTENTTYPE)
+	@PreAuthorize(StockAnalyzerConstant.OAUTH_ROLE)
+	@GetMapping(path = "/user/GetLastQuoteArrayForFilteredSymbol", consumes = StockAnalyzerConstant.CONTENTTYPE, produces = StockAnalyzerConstant.CONTENTTYPE)
 	public ResponseEntity<?> getLastQuoteArrayForFilteredSymbol() throws StockAnalyzerException {
 		LOGGER.debug("Entering StockDataAnalyzerController.class GetLastQuoteArrayForFilteredSymbol()");
 		String response=stockDataAnalyzerService.getLastQuoteArrayForFilteredSymbol();

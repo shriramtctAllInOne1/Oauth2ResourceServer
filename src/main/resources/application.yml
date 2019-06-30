@@ -41,6 +41,11 @@ constant:
    accessKey : 356e6624-cdda-4d8f-af5b-8f95ea19a5e3
    apiName : GetLastQuoteArray
    exchange : NFO
+   adminUrlPattern : /admin/**
+   userUrlPattern : /user/**
+   admin_role : ROLE_ADMIN
+   user_role : ROLE_USER
+   
    
 
    

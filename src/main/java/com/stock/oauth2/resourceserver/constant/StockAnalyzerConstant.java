@@ -69,7 +69,12 @@ public class StockAnalyzerConstant {
 	/**
 	 * scope
 	 */
-	public static final String OAUTH ="#oauth2.hasScope('read')";
+	public static final String OAUTH ="hasAuthority('ROLE_ADMIN')";
+	
+	/**
+	 * scope
+	 */
+	public static final String OAUTH_ROLE ="hasAuthority('ROLE_USER')";
 	/**
 	 * content type
 	 */

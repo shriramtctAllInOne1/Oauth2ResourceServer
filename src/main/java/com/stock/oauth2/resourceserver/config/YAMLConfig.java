@@ -68,6 +68,23 @@ public class YAMLConfig implements Serializable {
 	 * 
 	 */
 	String exchange;
+	
+	/**
+	 * 
+	 */
+	String adminUrlPattern ;
+	/**
+	 * 
+	 */
+	String   userUrlPattern ;
+	/**
+	 * 
+	 */
+	String   adminRole;
+	/**
+	 * 
+	 */
+	String  userRole;
 
 	/**
 	 * @return
@@ -201,6 +218,38 @@ public class YAMLConfig implements Serializable {
 	 */
 	public void setExchange(String exchange) {
 		this.exchange = exchange;
+	}
+
+	public String getAdminUrlPattern() {
+		return adminUrlPattern;
+	}
+
+	public void setAdminUrlPattern(String adminUrlPattern) {
+		this.adminUrlPattern = adminUrlPattern;
+	}
+
+	public String getUserUrlPattern() {
+		return userUrlPattern;
+	}
+
+	public void setUserUrlPattern(String userUrlPattern) {
+		this.userUrlPattern = userUrlPattern;
+	}
+
+	public String getAdminRole() {
+		return adminRole;
+	}
+
+	public void setAdminRole(String adminRole) {
+		this.adminRole = adminRole;
+	}
+
+	public String getUserRole() {
+		return userRole;
+	}
+
+	public void setUserRole(String userRole) {
+		this.userRole = userRole;
 	}
 
 	@Override

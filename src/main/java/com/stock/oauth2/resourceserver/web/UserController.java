@@ -22,6 +22,9 @@ import com.stock.oauth2.resourceserver.service.UserService;
 @RestController
 public class UserController {
 
+	/**
+	 * 
+	 */
 	@Autowired
 	UserService userService;
 
@@ -31,7 +34,7 @@ public class UserController {
 	private static final Logger LOGGER = LoggerFactory.getLogger(UserController.class);
 
 	@PreAuthorize(StockAnalyzerConstant.OAUTH)
-	@PostMapping(path = "/createUser", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+	@PostMapping(path = "/admin/createUser", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<String> createStrategy(@RequestBody MongoUserDetails mongoUser) {
 		LOGGER.debug("Entering UserController.class createStrategy()");
 		String response = userService.createUser(mongoUser);
